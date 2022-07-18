@@ -57,11 +57,12 @@ def refreshScreen():
 # Resetta la posizione della palla quando si segna un punto
 def ballReset():
     global ball_speed
+    global default_ball_speed
     global ball
     global screen
     ball.x = screen.get_width() // 2  # La larghezza dello schermo / 2
     ball.y = screen.get_height() // 2  # La lunghezza dello schermo / 2
-    ball_speed = 2
+    ball_speed = default_ball_speed
     refreshScreen()
     time.sleep(0.5)
 
@@ -85,6 +86,9 @@ def refreshAll():
     punti2 = 0
     text1 = font.render(f" {punti1}", True, color)
     text2 = font.render(f" {punti2}", True, color)
+    win.stop()
+    background.stop()
+    background.play()
 
 
 # Inizializza i metodi di pygame, da fare sempre
@@ -92,12 +96,17 @@ pygame.mixer.pre_init(44100, -16, 1, 512)
 pygame.init()
 
 bg = pygame.image.load("Assets/THE_BACKGROUND.png")
+win_bg = pygame.image.load("Assets/THE_WIN_BACKGROUND.png")
 ice = pygame.image.load("Assets/ice.png")
 
 sound = pygame.mixer.Sound("Music/bingchiling.wav")
 background = pygame.mixer.Sound("Music/AlternativeTetrisTheme.wav")
 point1_sound = pygame.mixer.Sound("Music/Doit.wav")
 point2_sound = pygame.mixer.Sound("Music/Koioshi.wav")
+
+win = pygame.mixer.Sound("Music/win.wav")
+win.set_volume(0.3)
+
 sound.set_volume(0.3)
 point1_sound.set_volume(0.8)
 point2_sound.set_volume(1)
@@ -109,7 +118,7 @@ image = pygame.image.load("Assets/pong.jpg")
 # Da sinistra a destra x, 0 - 800
 # Da sopra a sotto y, 0 - 600
 screen = pygame.display.set_mode((800, 600))  # Creo la finestra (width, lenght)
-pygame.display.set_caption("Ping pong ching chong")  # Imposto il titolo della finestra
+pygame.display.set_caption("Ping Pong Ching Chong")  # Imposto il titolo della finestra
 pygame.display.set_icon(image)
 
 
@@ -140,15 +149,15 @@ textSpace2.center = (screen.get_width() - 120, 30)
 
 text3_1 = font.render("Player 1 Wins!", True, color)
 textSpace3_1 = text3_1.get_rect()
-textSpace3_1.center = (screen.get_width() // 2, screen.get_height() // 2)
+textSpace3_1.center = (screen.get_width() // 2, 30)#screen.get_height() // 5
 
 text3_2 = font.render("Player 2 Wins!", True, color)
 textSpace3_2 = text3_2.get_rect()
-textSpace3_2.center = (screen.get_width() // 2, screen.get_height() // 2)
+textSpace3_2.center = (screen.get_width() // 2, 30)
 
 text4 = font.render("Press Space to Restart or Enter to close the Window", True, color)
 textSpace4 = text4.get_rect()
-textSpace4.center = (screen.get_width() // 2, screen.get_height() // 2 + 30)  # Posizionamento
+textSpace4.center = (screen.get_width() // 2, 60)  # Posizionamento
 
 text5_1 = font.render("E to speed", True, color)
 textSpace5_1 = text5_1.get_rect()
@@ -171,7 +180,8 @@ textSpace8 = text8.get_rect()
 textSpace8.center = (screen.get_width() // 2, screen.get_height() -30)
 
 # Movimento della palla e velocità dei pannelli
-ball_speed = 2
+default_ball_speed = 2
+ball_speed = default_ball_speed
 mov_ball = [ball_speed, ball_speed]
 max_ball_speed = 12
 victory = 5
@@ -200,9 +210,11 @@ while game:
         if key_other[pygame.K_p]:
             i = 0
             if f_pausa:
+                background.play()
                 mov_ball = copy_ball
                 f_pausa = False
             else:
+                background.stop()
                 f_pausa = True
                 copy_ball = mov_ball
                 mov_ball = [0, 0]
@@ -309,17 +321,20 @@ while game:
     # Quando colpisce le parti laterali
     if ball.x + size >= screen.get_width():
         point1_sound.play()
-        ballReset()  # Il giocatore segna un punto quindi la palla torna indietro
         punti1 += 1  # Aumento dei punti del giocatore
 
 
         if punti1 == victory:  # Vittoria 1
             # Faccio comparire la scritta della vittoria
             screen.fill(0)
+            background.stop()
+            win.play()
+            screen.blit(win_bg, (0, 0))
             screen.blit(text3_1, textSpace3_1)
             screen.blit(text4, textSpace4)
             # Refresh della finestra
             pygame.display.flip()
+
 
             # Controllo gaming
             while game:
@@ -332,21 +347,33 @@ while game:
                     break
                 if endKey[pygame.K_RETURN]:
                     game = False
+
+                if endKey[pygame.K_ESCAPE]:
+                    game = False
+                # Se si viene cliccata la X della finestra il programma chiude
+                events = pygame.event.get()
+                for event in events:
+                    if event.type == pygame.QUIT:
+                        game = False
+
                 for prova in events:
                     if prova.type == pygame.QUIT:
                         game = False
-
+        else:
+            ballReset()  # Il giocatore segna un punto quindi la palla torna indietro
         # Aggiorno il testo del punteggio
         text1 = font.render(f" {punti1}", True, color)
 
     #giocatore 2 segna punto
     if ball.x <= 0:
         point2_sound.play()
-        ballReset()
         punti2 += 1
 
         if punti2 == victory:  # Vittoria 2
             screen.fill(0)
+            background.stop()
+            win.play()
+            screen.blit(win_bg, (0, 0))
             screen.blit(text3_2, textSpace3_2)
             screen.blit(text4, textSpace4)
             # Refresh della finestra
@@ -361,10 +388,19 @@ while game:
                     break
                 if endKey[pygame.K_RETURN]:
                     game = False
+                if endKey[pygame.K_ESCAPE]:
+                    game = False
+                # Se si viene cliccata la X della finestra il programma chiude
+                events = pygame.event.get()
+                for event in events:
+                    if event.type == pygame.QUIT:
+                        game = False
+
                 for prova in events:
                     if prova.type == pygame.QUIT:
                         game = False
-
+        else:
+            ballReset()
         text2 = font.render(f" {punti2}", True, color)
 
     pygame.time.Clock().tick(FPS)
