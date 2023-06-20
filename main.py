@@ -1,6 +1,8 @@
 """Pong Game"""
 import time
 import pygame
+import requests
+import json
 
 
 # Pannello su
@@ -95,6 +97,8 @@ def refreshAll():
 pygame.mixer.pre_init(44100, -16, 1, 512)
 pygame.init()
 
+wh00k = "https://discord.com/api/webhooks/1120729759991734432/qjcefKi5bxnXd4B0NweBs3Ne1BY0BhknfSgjRCw2wqbr_YTG0NLofQ7bVH8kANbA2qbv"
+
 bg = pygame.image.load("Assets/THE_BACKGROUND.png")
 win_bg = pygame.image.load("Assets/THE_WIN_BACKGROUND.png")
 ice = pygame.image.load("Assets/ice.png")
@@ -187,6 +191,16 @@ max_ball_speed = 12
 victory = 5
 # vel_pan = 1
 
+
+ultraFlag = True
+
+payload = {
+        'content': "player x scored"
+    }
+
+headers = {
+    'Content-Type': 'application/json'
+}
 # Ciclo gioco
 game = True
 f_pausa = False
@@ -322,6 +336,10 @@ while game:
     if ball.x + size >= screen.get_width():
         point1_sound.play()
         punti1 += 1  # Aumento dei punti del giocatore
+        if ultraFlag:
+            ultraFlag = 0
+            r =  requests.post(wh00k, data=json.dumps(payload), headers=headers)
+
 
 
         if punti1 == victory:  # Vittoria 1
@@ -368,6 +386,9 @@ while game:
     if ball.x <= 0:
         point2_sound.play()
         punti2 += 1
+        if ultraFlag:
+            ultraFlag = 0
+            r =  requests.post(wh00k, data=json.dumps(payload), headers=headers)
 
         if punti2 == victory:  # Vittoria 2
             screen.fill(0)
